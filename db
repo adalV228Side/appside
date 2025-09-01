@@ -1,0 +1,156 @@
+import psycopg2
+from datetime import datetime
+
+class Database:
+    def __init__(self):
+        self.connection = psycopg2.connect(
+            dbname="side",
+            user="postgres",
+            password="246942",
+            host="localhost",
+            port=5432
+        )
+        self.cursor = self.connection.cursor()
+        self.create_tables()
+
+    def create_tables(self):
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS equipment (
+                id SERIAL PRIMARY KEY,
+                date TEXT,
+                nomer_n_n TEXT,
+                application TEXT,
+                division TEXT,
+                inv TEXT,
+                model TEXT,
+                zdal TEXT,
+                date_issue TEXT,
+                fio_issue TEXT
+            )
+        """)
+        
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS cartridges (
+                id SERIAL PRIMARY KEY,
+                date TEXT,
+                nomer_n_n TEXT,
+                application TEXT,
+                division TEXT,
+                inv TEXT,
+                model TEXT,
+                zdal TEXT,
+                date_issue TEXT,
+                fio_issue TEXT
+            )
+        """)
+        self.connection.commit()
+
+    # Добавление оборудования
+    def add_equipment(self, date, nomer_n_n, application, division, inv, model, zdal, date_issue=None, fio_issue=None):
+        self.cursor.execute("""
+            INSERT INTO equipment 
+            (date, nomer_n_n, application, division, inv, model, zdal, date_issue, fio_issue)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (date, nomer_n_n, application, division, inv, model, zdal, date_issue, fio_issue))
+        self.connection.commit()
+        return True
+
+    def add_equipment_log(self):
+        self.cursor.execute("SELECT * FROM equipment ORDER BY id DESC LIMIT 1")
+        rows = self.cursor.fetchone()
+        if rows:
+            column_names = [desc[0] for desc in self.cursor.description]
+            return ", ".join(f"{name}: {value}" for name, value in zip(column_names, rows))
+        else:
+            return "Таблица пуста"
+
+    def get_all_equipment(self):
+        self.cursor.execute("SELECT * FROM equipment")
+        return self.cursor.fetchall()
+
+    def get_equipment_by(self, column, value):
+        self.cursor.execute(f"SELECT * FROM equipment WHERE {column} = %s", (value,))
+        return self.cursor.fetchall()
+
+    def update_equipment(self, id, date_issue, fio_issue):
+        self.cursor.execute("""
+            UPDATE equipment 
+            SET date_issue = %s, fio_issue = %s 
+            WHERE id = %s
+        """, (date_issue, fio_issue, id))
+        self.connection.commit()
+        return True
+
+    # ✅ Новый метод для частичного обновления оборудования
+    def update_equipment_partial(self, id, data):
+        set_clause = ", ".join([f"{col} = %s" for col in data.keys()])
+        values = list(data.values()) + [id]
+        query = f"UPDATE equipment SET {set_clause} WHERE id = %s"
+        self.cursor.execute(query, values)
+        self.connection.commit()
+        return True
+
+    def delete_equipment(self, id):
+        self.cursor.execute("DELETE FROM equipment WHERE id = %s", (id,))
+        self.connection.commit()
+        return True
+
+    def delete_all_equipment(self):
+        self.cursor.execute("DELETE FROM equipment")
+        self.connection.commit()
+        return True
+
+    # Картриджи
+    def add_cartridge(self, date, nomer_n_n, application, division, inv, model, zdal, date_issue=None, fio_issue=None):
+        self.cursor.execute("""
+            INSERT INTO cartridges 
+            (date, nomer_n_n, application, division, inv, model, zdal, date_issue, fio_issue)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (date, nomer_n_n, application, division, inv, model, zdal, date_issue, fio_issue))
+        self.connection.commit()
+        return True
+
+    def add_cartridges_log(self):
+        self.cursor.execute("SELECT * FROM cartridges ORDER BY id DESC LIMIT 1")
+        rows = self.cursor.fetchone()
+        if rows:
+            column_names = [desc[0] for desc in self.cursor.description]
+            return ", ".join(f"{name}: {value}" for name, value in zip(column_names, rows))
+        else:
+            return "Таблица пуста"
+
+    def get_all_cartridges(self):
+        self.cursor.execute("SELECT * FROM cartridges")
+        return self.cursor.fetchall()
+
+    def get_cartridge_by(self, column, value):
+        self.cursor.execute(f"SELECT * FROM cartridges WHERE {column} = %s", (value,))
+        return self.cursor.fetchall()
+
+    def update_cartridge(self, id, date_issue, fio_issue):
+        self.cursor.execute("""
+            UPDATE cartridges 
+            SET date_issue = %s, fio_issue = %s 
+            WHERE id = %s
+        """, (date_issue, fio_issue, id))
+        self.connection.commit()
+        return True
+
+    # ✅ Новый метод для частичного обновления картриджей
+    def update_cartridge_partial(self, id, data):
+        set_clause = ", ".join([f"{col} = %s" for col in data.keys()])
+        values = list(data.values()) + [id]
+        query = f"UPDATE cartridges SET {set_clause} WHERE id = %s"
+        self.cursor.execute(query, values)
+        self.connection.commit()
+        return True
+
+    def delete_cartridge(self, id):
+        self.cursor.execute("DELETE FROM cartridges WHERE id = %s", (id,))
+        self.connection.commit()
+        return True
+
+    def delete_all_cartridges(self):
+        self.cursor.execute("DELETE FROM cartridges")
+        self.connection.commit()
+        return True
