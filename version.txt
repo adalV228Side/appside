@@ -1,5 +1,1 @@
-{
-  "version": "1.4.0",
-  "url": "https://example.com/app_latest.exe",
-  "notes": "Исправлены ошибки, добавлен автоапдейтер"
-}
+1.0.1
